@@ -9,6 +9,7 @@ const YT = typeof ytgame !== 'undefined' ? ytgame : null;
 const IN_YT = !!(YT && YT.IN_PLAYABLES_ENV);
 const QS = new URLSearchParams(location.search);
 const DEBUG = !IN_YT && QS.get('debug') === '1';
+const DIAG = /(^#|&)debug(&|$)/.test(location.hash);      // the SDK Test Suite opens games with #debug: log sizes and state
 function sdk(fn) { if (!YT) return undefined; try { return fn(YT); } catch (e) { return undefined; } }
 function settle(p, ms, fallback) {          // a promise's value, or `fallback` if it fails or takes longer than ms
   return new Promise(res => {
@@ -37,7 +38,7 @@ const STR = {
 let S = STR.en;
 async function detectLang() {
   let tag = 'en';
-  const v = await settle(sdk(y => y.system.getLanguage()), 1500, null);
+  const v = await settle(sdk(y => y.system.getLanguage()), 1000, null);
   if (typeof v === 'string' && v) tag = v;
   if (!IN_YT && QS.get('lang')) tag = QS.get('lang');          // local testing only
   const base = tag.toLowerCase().split(/[-_]/)[0];
@@ -661,8 +662,19 @@ window.addEventListener('resize', resize);
 
 // ───────── pause and resume (only YouTube's onPause/onResume) ─────────
 let paused = false, raf = 0, lastNow = 0;
+let diagT = 0;
+function diag(why) {
+  if (!DIAG) return;
+  const r = cvs.getBoundingClientRect();
+  console.log('[laddoo-diag]', why, JSON.stringify({ inner: [innerWidth, innerHeight], client: [document.documentElement.clientWidth, document.documentElement.clientHeight],
+    rect: [Math.round(r.width), Math.round(r.height)], canvas: [cvs.width, cvs.height], dpr: DPR, k: L && +L.k.toFixed(4), world: L && [Math.round(L.WW), Math.round(L.HH)],
+    state: G.state, paused, needTap: G.needTap, inYT: IN_YT }));
+}
 function frame(now) {
   raf = requestAnimationFrame(frame);
+  // the frame can change size without a resize event reaching us (e.g. an iframe shown late): check every frame
+  if (!L || Math.round(window.innerWidth) !== L.w || Math.round(window.innerHeight) !== L.h) { resize(); diag('size changed'); }
+  if (DIAG && now - diagT > 3000) { diagT = now; diag('tick'); }
   let dt = (now - lastNow) / 1000; lastNow = now;
   if (!(dt > 0)) dt = 0; else if (dt > .05) dt = .05;
   if (DEBUG && G.timeScale >= 0) dt *= G.timeScale;          // testing only: slow motion
@@ -694,12 +706,14 @@ async function boot() {
   sdk(y => y.system.onAudioEnabledChange(on => Sound.setEnabled(on)));
   window.addEventListener('error', () => sdk(y => y.health.logError()));
   window.addEventListener('unhandledrejection', () => sdk(y => y.health.logWarning()));
+  loadSave();                                   // the cloud save arrives in the background; the title shows the best score when it does
   const fontReady = document.fonts && document.fonts.load ? document.fonts.load(`60px ${FONT}`) : null;
-  const [lang] = await Promise.all([detectLang(), settle(fontReady, 3000, null), settle(loadSave(), 3000, null)]);
+  const [lang] = await Promise.all([detectLang(), settle(fontReady, 1500, null)]);
   S = STR[lang]; document.documentElement.lang = lang;
   G.state = 'title';
   if (!paused) { lastNow = performance.now(); raf = requestAnimationFrame(frame); }
   sdk(y => y.game.gameReady());
+  diag('gameReady');
 }
 boot();
 
