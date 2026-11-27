@@ -1,0 +1,21 @@
+{
+  "name": "Laddoo Chor",
+  "short_name": "Laddoo Chor",
+  "description": "Tap the Cockroach Gang before they carry the laddoos away! A slapstick tap game from the cartoon series Natkhat Chhora vs the Cockroach Gang.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#ffe6c9",
+  "theme_color": "#f5902a",
+  "lang": "en",
+  "categories": ["games", "entertainment"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

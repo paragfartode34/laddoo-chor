@@ -10,6 +10,25 @@ const IN_YT = !!(YT && YT.IN_PLAYABLES_ENV);
 const QS = new URLSearchParams(location.search);
 const DEBUG = !IN_YT && QS.get('debug') === '1';
 const DIAG = /(^#|&)debug(&|$)/.test(location.hash);      // the SDK Test Suite opens games with #debug: log sizes and state
+
+// ───────── the installable web app (only on the web: never inside YouTube or the Android app) ─────────
+const ON_WEB = !IN_YT && location.hostname !== 'appassets.androidplatform.net';
+let installPrompt = null;                                    // Chrome's "install this app" offer, shown as a title-screen button
+if (ON_WEB) {
+  const link = (rel, href) => { const l = document.createElement('link'); l.rel = rel; l.href = href; document.head.appendChild(l); };
+  link('manifest', 'manifest.webmanifest');
+  link('apple-touch-icon', 'icons/apple-touch-icon.png');
+  const meta = document.createElement('meta'); meta.name = 'theme-color'; meta.content = '#f5902a'; document.head.appendChild(meta);
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installPrompt = e; });
+  window.addEventListener('appinstalled', () => { installPrompt = null; });
+  if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+async function promptInstall() {
+  const p = installPrompt;
+  if (!p) return;
+  installPrompt = null;
+  try { await p.prompt(); await p.userChoice; } catch (e) {}
+}
 function sdk(fn) { if (!YT) return undefined; try { return fn(YT); } catch (e) { return undefined; } }
 function settle(p, ms, fallback) {          // a promise's value, or `fallback` if it fails or takes longer than ms
   return new Promise(res => {
@@ -24,16 +43,20 @@ const REDUCED_MOTION = !!(window.matchMedia && window.matchMedia('(prefers-reduc
 const STR = {
   en: { tagline: 'Save the laddoos from the Cockroach Gang!', series: 'Natkhat Chhora vs the Cockroach Gang', play: 'TAP TO PLAY', hint: 'Tap the cockroaches!',
     best: 'Best', newBest: 'NEW BEST!', over: 'The gang took every laddoo!', again: 'PLAY AGAIN', adCont: 'Watch an ad: +3 laddoos', noAd: 'No ad right now',
-    paused: 'Paused', tapGo: 'Tap to continue', saved: 'SAVED!', sweets: '+3 LADDOOS!', golden: 'GOLDEN CHAPPAL!', ratSub: 'Hit him 4 times!', go: 'GO!' },
+    paused: 'Paused', tapGo: 'Tap to continue', saved: 'SAVED!', sweets: '+3 LADDOOS!', golden: 'GOLDEN CHAPPAL!', ratSub: 'Hit him 4 times!', go: 'GO!',
+    install: 'Install app' },
   hi: { tagline: 'लड्डुओं को कॉकरोच गैंग से बचाओ!', series: 'नटखट छोरा vs कॉकरोच गैंग', play: 'खेलने के लिए टैप करो', hint: 'कॉकरोच पर टैप करो!',
     best: 'बेस्ट', newBest: 'नया रिकॉर्ड!', over: 'गैंग सारे लड्डू ले गया!', again: 'फिर से खेलो', adCont: 'विज्ञापन देखो: +3 लड्डू', noAd: 'अभी कोई विज्ञापन नहीं',
-    paused: 'रुका हुआ', tapGo: 'जारी रखने के लिए टैप करो', saved: 'BACH GAYA!', sweets: '+3 LADDOO!', golden: 'SONE KI CHAPPAL!', ratSub: 'उसे 4 बार मारो!', go: 'CHALO!' },
+    paused: 'रुका हुआ', tapGo: 'जारी रखने के लिए टैप करो', saved: 'BACH GAYA!', sweets: '+3 LADDOO!', golden: 'SONE KI CHAPPAL!', ratSub: 'उसे 4 बार मारो!', go: 'CHALO!',
+    install: 'ऐप इंस्टॉल करें' },
   es: { tagline: '¡Salva los laddus de la Pandilla Cucaracha!', series: 'Natkhat Chhora vs la Pandilla Cucaracha', play: 'TOCA PARA JUGAR', hint: '¡Toca las cucarachas!',
     best: 'Récord', newBest: '¡NUEVO RÉCORD!', over: '¡La pandilla se llevó todos los laddus!', again: 'JUGAR OTRA VEZ', adCont: 'Ver un anuncio: +3 laddus', noAd: 'No hay anuncios ahora',
-    paused: 'Pausa', tapGo: 'Toca para continuar', saved: '¡SALVADO!', sweets: '¡+3 LADDUS!', golden: '¡CHANCLA DE ORO!', ratSub: '¡Dale 4 golpes!', go: '¡YA!' },
+    paused: 'Pausa', tapGo: 'Toca para continuar', saved: '¡SALVADO!', sweets: '¡+3 LADDUS!', golden: '¡CHANCLA DE ORO!', ratSub: '¡Dale 4 golpes!', go: '¡YA!',
+    install: 'Instalar app' },
   pt: { tagline: 'Salve os laddus da Gangue das Baratas!', series: 'Natkhat Chhora vs a Gangue das Baratas', play: 'TOQUE PARA JOGAR', hint: 'Toque nas baratas!',
     best: 'Recorde', newBest: 'NOVO RECORDE!', over: 'A gangue levou todos os laddus!', again: 'JOGAR DE NOVO', adCont: 'Ver um anúncio: +3 laddus', noAd: 'Sem anúncio agora',
-    paused: 'Pausado', tapGo: 'Toque para continuar', saved: 'SALVO!', sweets: '+3 LADDUS!', golden: 'CHINELO DE OURO!', ratSub: 'Acerte 4 vezes!', go: 'JÁ!' },
+    paused: 'Pausado', tapGo: 'Toque para continuar', saved: 'SALVO!', sweets: '+3 LADDUS!', golden: 'CHINELO DE OURO!', ratSub: 'Acerte 4 vezes!', go: 'JÁ!',
+    install: 'Instalar app' },
 };
 let S = STR.en;
 async function detectLang() {
@@ -576,6 +599,7 @@ function drawTitle(c) {
   const bw = Math.min(L.WW * .7, 640), bh = Math.min(L.floorH * .62, 124);
   button(c, 'play', S.play, L.cx, L.floorY + L.floorH * .52, bw, bh, { pulse: true });
   if (SAVE.best > 0) inkText(c, `${S.best} ${SAVE.best}`, L.WW - 40, 64, { size: 44, align: 'right', fill: '#fff', lw: 8 });
+  if (installPrompt) button(c, 'install', S.install, 32 + 105, 62, 210, 60, { fill: '#7fd0ff' });   // web only, when Chrome offers it
 }
 function drawOver(c) {
   c.fillStyle = 'rgba(59,42,33,.42)'; c.fillRect(0, 0, L.WW, L.HH);
@@ -632,9 +656,14 @@ function render() {
 }
 
 // ───────── input ─────────
+const buttonAt = (x, y) => G.buttons.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
 function onPress(x, y) {
   if (paused) return;
-  if (G.state === 'title') { startRound(); return; }
+  if (G.state === 'title') {
+    const b = buttonAt(x, y);
+    if (b && b.id === 'install') return;             // installing needs a whole tap: handled on "click" below
+    startRound(); return;
+  }
   if (G.state === 'play') { if (G.needTap) { G.needTap = false; return; } tapAt(x, y); return; }
   if (G.state === 'over' && G.overT > .7) {
     const b = G.buttons.find(b => x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h);
@@ -650,6 +679,11 @@ cvs.addEventListener('pointerdown', ev => {
   onPress((ev.clientX - r.left) / L.k, (ev.clientY - r.top) / L.k);
 }, { passive: false });
 cvs.addEventListener('contextmenu', ev => ev.preventDefault());
+cvs.addEventListener('click', ev => {
+  if (G.state !== 'title' || !installPrompt || !L) return;
+  const r = cvs.getBoundingClientRect(), b = buttonAt((ev.clientX - r.left) / L.k, (ev.clientY - r.top) / L.k);
+  if (b && b.id === 'install') promptInstall();
+});
 // phones only let sound start on the end of a tap (pointerup / touchend / click), so try on those too
 for (const name of ['pointerup', 'touchend', 'click']) window.addEventListener(name, () => Sound.unlock(), { passive: true });
 window.addEventListener('keydown', ev => {
