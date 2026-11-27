@@ -1,0 +1,9 @@
+Laddoo Chor: a YouTube Playable from the cartoon series "Natkhat Chhora vs the Cockroach Gang"
+(the YouTube channel "Everything is Here").
+
+Characters (the pagdi boy, the Cockroach Gang, Mota Chuha the rat), drawings, game design, music and sound effects are
+original and were made in code for the series and this game. The music is the series' own theme, synthesised in the
+browser with the Web Audio API. There are no audio files, images or third-party code in this game.
+
+Font: Lilita One by Juan Montoreano, licensed under the SIL Open Font License, Version 1.1
+(https://openfontlicense.org). The font file keeps its copyright notice and license in its metadata.

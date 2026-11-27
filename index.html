@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Laddoo Chor</title>
+<meta name="description" content="Tap the Cockroach Gang before they carry the laddoos away! A slapstick tap game from the cartoon series Natkhat Chhora vs the Cockroach Gang.">
+<link rel="icon" href="data:,">
+<!-- The YouTube Playables SDK: loaded before any game code. -->
+<script src="https://www.youtube.com/game_api/v1"></script>
+<style>
+  @font-face { font-family: 'Lilita One'; src: url(LilitaOne.woff2) format('woff2'); font-display: block; }
+  html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #ffe6c9; }
+  body { touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  canvas { display: block; position: fixed; left: 0; top: 0; width: 100%; height: 100%; touch-action: none; outline: none; }
+</style>
+</head>
+<body>
+<canvas id="game" tabindex="0" aria-label="Laddoo Chor: tap the cockroaches before they carry the laddoos away"></canvas>
+<script src="draw.js"></script>
+<script src="audio.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
