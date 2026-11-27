@@ -650,6 +650,8 @@ cvs.addEventListener('pointerdown', ev => {
   onPress((ev.clientX - r.left) / L.k, (ev.clientY - r.top) / L.k);
 }, { passive: false });
 cvs.addEventListener('contextmenu', ev => ev.preventDefault());
+// phones only let sound start on the end of a tap (pointerup / touchend / click), so try on those too
+for (const name of ['pointerup', 'touchend', 'click']) window.addEventListener(name, () => Sound.unlock(), { passive: true });
 window.addEventListener('keydown', ev => {
   if (ev.key !== ' ' && ev.key !== 'Enter') return;           // Esc and every other key are left alone
   ev.preventDefault(); Sound.unlock();
@@ -700,10 +702,13 @@ function resumeGame() {
 async function boot() {
   drawLoading();
   sdk(y => y.game.firstFrameReady());
-  sdk(y => y.system.onPause(pauseGame));
-  sdk(y => y.system.onResume(resumeGame));
-  Sound.setEnabled(sdk(y => y.system.isAudioEnabled()) !== false);
-  sdk(y => y.system.onAudioEnabledChange(on => Sound.setEnabled(on)));
+  if (IN_YT) {
+    // only inside YouTube: outside it the SDK is a no-op that reports "audio off" at once, which silenced the game
+    sdk(y => y.system.onPause(pauseGame));
+    sdk(y => y.system.onResume(resumeGame));
+    Sound.setEnabled(sdk(y => y.system.isAudioEnabled()) !== false);
+    sdk(y => y.system.onAudioEnabledChange(on => Sound.setEnabled(on)));
+  }
   window.addEventListener('error', () => sdk(y => y.health.logError()));
   window.addEventListener('unhandledrejection', () => sdk(y => y.health.logWarning()));
   loadSave();                                   // the cloud save arrives in the background; the title shows the best score when it does

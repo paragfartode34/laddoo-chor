@@ -27,10 +27,15 @@ const Sound = (() => {
     return true;
   }
   // the first tap starts the audio (browsers need a user gesture); while muted it runs silent, so unmuting needs no tap
+  let primed = false;
   function unlock() {
     if (!init()) return;
     unlocked = true;
     if (!paused && ac.state !== 'running') ac.resume().catch(() => {});
+    if (!primed) {                      // a silent one-sample sound inside the tap fully wakes audio on older iPhones
+      primed = true;
+      try { const s = ac.createBufferSource(); s.buffer = ac.createBuffer(1, 1, ac.sampleRate); s.connect(ac.destination); s.start(0); } catch (e) {}
+    }
   }
   function setEnabled(on) {
     enabled = on !== false;
